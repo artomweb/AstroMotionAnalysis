@@ -4,7 +4,14 @@ As part of a University group project we are creating a star tracker for astroph
 
 For tracking the stars, the required angular velocity is 15 arcsec/sec.
 
-You can see our results in the `graphs/` folder.
+Velocity over time
+
+<img width="300" alt="image" src="https://github.com/user-attachments/assets/f88c6f93-728f-4e57-b8d9-61a75c43ddb1" />
+
+Position over time
+
+<img width="300" alt="image" src="https://github.com/user-attachments/assets/db19d5fc-d6d2-442c-873b-e660eadf39c1" />
+
 
 ## How it works
 
@@ -21,4 +28,5 @@ Distances on the wall are calculated by dividing the real world height of the ta
 
 `positionVsTime.py` plots position instead of velocity.
 
-`staticVariation.py` plots the sub-pixel movements of the tag finder over time when the mount wasn't moving. This is trying to prove that the tag motion is purely from the mount and not from variation in the tracking accuracy.
+`staticVariation.py` plots the sub-pixel movements of the tag over time when the mount wasn't moving. This is trying to prove that the tag motion is purely from the mount and not from variation in the tracking accuracy.
+
