@@ -15,6 +15,9 @@ Position over time
 
 ## How it works
 
+<img width="500" alt="AprilTag" src="https://github.com/user-attachments/assets/9fe961c1-7480-40d8-8783-71029f413f24" />
+
+
 1. An Apriltag is placed on the wall and the mount is setup so the camera can capture as many frames as possible with the tag visible.
 2. `captureInterval.py` captures an image every few seconds.
 3. `apriltagtrack.py` extracts the position of the tag in each frame.
