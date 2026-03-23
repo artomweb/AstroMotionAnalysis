@@ -30,3 +30,12 @@ Distances on the wall are calculated by dividing the real world height of the ta
 
 `staticVariation.py` plots the sub-pixel movements of the tag over time when the mount wasn't moving. This is trying to prove that the tag motion is purely from the mount and not from variation in the tracking accuracy.
 
+## Venv
+
+`python3 -m venv aprilVenv`
+
+`source venv/bin/activate` (linux)
+
+`venv\Scripts\activate` (Windows)
+
+`pip install -r requirements.txt`
