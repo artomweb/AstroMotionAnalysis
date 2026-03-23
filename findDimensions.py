@@ -3,11 +3,10 @@ import os
 import glob
 import csv
 from dt_apriltags import Detector
-from tqdm import tqdm  
 import matplotlib.pyplot as plt
 
 
-img_path = "captures/2025-11-10T18-21-13.png" 
+img_path = "captures/2025-11-11T18-32-16-842.png" 
 tag_family = "tagStandard41h12"
 
 detector = Detector(families=tag_family)
@@ -31,3 +30,5 @@ if detections:
     plt.title(f"AprilTag detected: {tag.tag_id}\nWidth={width}px, Height={height}px")
     plt.axis('off')
     plt.show()
+else:
+    print("No AprilTag detected in the image.")

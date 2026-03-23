@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-distToWall = 3500 #mm 3510
-tagCenterHeightPx = 495.59 #px
+distToWall = 3420 #mm 3510
+tagCenterHeightPx = 160.09 #px
 tagRealHeight = 78 #mm
 
 
@@ -11,7 +11,7 @@ mmPerPixel = tagRealHeight / tagCenterHeightPx # mm per pixel in image
 
 
 
-df = pd.read_csv("oldTracking2.csv")
+df = pd.read_csv("apriltag_C0009.csv")
 
 
 # Calculate differences
@@ -32,6 +32,7 @@ df = df.dropna()
 df['t_from_start'] = df['timestamp'] - df['timestamp'].iloc[0]
 
 averageVelocity = np.mean(df['angleChange_arcsec_persec'])
+print(f"Average velocity: {averageVelocity:.2f} arcsec/s")
 # Plot
 plt.figure(figsize=(8,5))
 plt.scatter(df['t_from_start'], df['angleChange_arcsec_persec'], marker='o', label='Velocity')

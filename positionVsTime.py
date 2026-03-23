@@ -11,7 +11,7 @@ mmPerPixel = tagRealHeight / tagCenterHeightPx # mm per pixel in image
 
 
 
-df = pd.read_csv("apriltag_tracking.csv")
+df = pd.read_csv("apriltag_C0009.csv")
 
 
 df['t_from_start'] = df['timestamp'] - df['timestamp'].iloc[0]
