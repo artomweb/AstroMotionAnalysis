@@ -2,16 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-distToWall = 3500 #mm 3510
-tagCenterHeightPx = 495.59 #px
-tagRealHeight = 78 #mm
-
-
-mmPerPixel = tagRealHeight / tagCenterHeightPx # mm per pixel in image
-
-
-
-df = pd.read_csv("apriltag_C0009.csv")
+df = pd.read_csv("MAH01867.MP4.csv")
 
 
 df['t_from_start'] = df['timestamp'] - df['timestamp'].iloc[0]

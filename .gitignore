@@ -2,3 +2,5 @@ pastCaptures/
 captures/
 aprilVenv
 apriltag_tracking.csv
+*.MP4
+*.csv

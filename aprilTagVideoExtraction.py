@@ -4,10 +4,10 @@ import os
 from dt_apriltags import Detector
 from tqdm import tqdm
 
-video_path = "captures/C0009.mp4"
-output_csv = "apriltag_C0009.csv"
+video_path = "MAH01867.MP4"
+output_csv = "MAH01867.MP4.csv"
 tag_family = "tagStandard41h12"
-interval_seconds = 5.0  
+interval_seconds = 1.0  
 
 detector = Detector(families=tag_family, nthreads=12)
 
@@ -26,7 +26,7 @@ with open(output_csv, mode="w", newline="") as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(["frame_index", "timestamp", "center_x", "center_y"])
 
-    with tqdm(total=int(total_duration_ms), desc="Analyzing Video") as pbar:
+    with tqdm(total=int(total_duration_ms), desc="Analyzing Video", unit="frames") as pbar:
         while current_target_ms < total_duration_ms:
             cap.set(cv2.CAP_PROP_POS_MSEC, current_target_ms)
             
@@ -52,8 +52,7 @@ with open(output_csv, mode="w", newline="") as csvfile:
             
             # Increment target and update progress bar
             current_target_ms += ms_step
-            pbar.n = min(int(actual_ms), int(total_duration_ms))
-            pbar.refresh()
+            pbar.update(int(ms_step))
 
 cap.release()
 print(f"\nProcessing complete. Results saved to: {output_csv}")
