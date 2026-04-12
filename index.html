@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en" data-theme="cupcake">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>astromotionanalysis</title>
+  </head>
+  <body>
+    <div class="flex flex-col items-center gap-2 justify-items-center mt-5">
+      <label class="input">
+        <span class="label">Time step</span>
+        <input
+          type="number"
+          class="input"
+          required
+          min="0"
+          value="0.2"
+          id="input-time-step"
+        />
+        <span class="label">seconds</span>
+      </label>
+      <label class="input">
+        <span class="label">Real tag height</span>
+        <input
+          type="number"
+          class="input"
+          required
+          min="1"
+          value="78"
+          id="input-tag-height"
+        />
+        <span class="label">mm</span>
+      </label>
+      <label class="input">
+        <span class="label">Distance to wall</span>
+        <input
+          type="number"
+          class="input"
+          required
+          min="1"
+          value="3600"
+          id="input-dist-wall"
+        />
+        <span class="label">mm</span>
+      </label>
+      <div class="flex gap-3">
+        <input
+          type="file"
+          class="file-input"
+          id="file-input"
+          accept="video/*"
+        />
+        <button class="btn btn-warning">Clear</button>
+      </div>
+      <button class="btn btn-primary">Run again</button>
+
+      <div id="imageCont"></div>
+      <div id="pos-plot-div"></div>
+      <div id="vel-plot-div"></div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

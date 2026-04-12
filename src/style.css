@@ -1,0 +1,28 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes:
+    light --default,
+    dark --prefersdark,
+    cupcake;
+}
+
+#drop-area {
+  border: 2px dashed #aaa;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#drop-area.hover {
+  border-color: #333;
+  background: #f5f5f5;
+}
+
+canvas {
+  max-width: 80vw; /* Scale down to width of screen */
+  max-height: 80vh; /* Leave some room for text/buttons */
+  display: block;
+  margin: 20px auto;
+  border: 2px solid #555;
+  object-fit: contain; /* Keeps aspect ratio correct */
+}
