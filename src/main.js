@@ -3,7 +3,7 @@ import "./style.css";
 import * as Comlink from "comlink";
 import Plotly from "plotly.js-dist";
 
-const worker = new Worker(new URL("./apriltag.js", import.meta.url));
+const worker = new Worker("/apriltag.js", { type: "classic" });
 
 const Apriltag = Comlink.wrap(worker);
 
