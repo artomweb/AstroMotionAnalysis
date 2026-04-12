@@ -15,11 +15,54 @@ const apriltag = await new Apriltag(
 
 const fileInput = document.getElementById("file-input");
 
+let lastFile = null;
+let isProcessing = false;
+
 fileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) handleFile(file);
+  lastFile = file;
 });
 
+document.getElementById("btn-run").addEventListener("click", () => {
+  if (!lastFile) {
+    alert("No file loaded.");
+    return;
+  }
+
+  if (isProcessing) {
+    alert("Processing already in progress.");
+    return;
+  }
+
+  clearOutputs();
+  handleFile(lastFile);
+});
+
+document.getElementById("btn-clear").addEventListener("click", () => {
+  clearOutputs();
+
+  fileInput.value = ""; // reset file picker
+  lastFile = null;
+});
+
+function clearOutputs() {
+  // Remove canvases
+  document.querySelectorAll("canvas").forEach((c) => c.remove());
+
+  // Clear Plotly plots
+  const posDiv = document.getElementById("pos-plot-div");
+  const velDiv = document.getElementById("vel-plot-div");
+
+  Plotly.purge(posDiv);
+  Plotly.purge(velDiv);
+
+  posDiv.innerHTML = "";
+  velDiv.innerHTML = "";
+
+  // Optional: clear image container explicitly
+  document.getElementById("imageCont").innerHTML = "";
+}
 function initPersistentInputs() {
   const settings = [
     { id: "input-time-step", key: "InputTimeStep" },
@@ -58,95 +101,100 @@ function convertToGrayscale(imageData) {
 }
 
 async function handleFile(file) {
-  const timeStepSeconds = parseFloat(
-    document.getElementById("input-time-step").value,
-  );
-  const tagHeightmm = parseFloat(
-    document.getElementById("input-tag-height").value,
-  );
-  const distanceWallmm = parseFloat(
-    document.getElementById("input-dist-wall").value,
-  );
-  const blobUrl = URL.createObjectURL(file);
-  const video = document.createElement("video");
-  video.src = blobUrl;
-  video.muted = true;
+  isProcessing = true;
+  try {
+    const timeStepSeconds = parseFloat(
+      document.getElementById("input-time-step").value,
+    );
+    const tagHeightmm = parseFloat(
+      document.getElementById("input-tag-height").value,
+    );
+    const distanceWallmm = parseFloat(
+      document.getElementById("input-dist-wall").value,
+    );
+    const blobUrl = URL.createObjectURL(file);
+    const video = document.createElement("video");
+    video.src = blobUrl;
+    video.muted = true;
 
-  await new Promise((r) => (video.onloadedmetadata = r));
+    await new Promise((r) => (video.onloadedmetadata = r));
 
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-  document.querySelectorAll("canvas").forEach((c) => c.remove());
-  // document.getElementById("file-input").after(canvas);
+    document.querySelectorAll("canvas").forEach((c) => c.remove());
+    // document.getElementById("file-input").after(canvas);
 
-  document.getElementById("imageCont").appendChild(canvas);
+    document.getElementById("imageCont").appendChild(canvas);
 
-  const trajectoryData = [];
-  let currentTime = 0;
+    const trajectoryData = [];
+    let currentTime = 0;
 
-  console.log(
-    `Processing ${video.duration.toFixed(2)}s video at ${timeStepSeconds}s intervals...`,
-  );
-
-  while (currentTime <= video.duration) {
-    video.currentTime = currentTime;
-
-    // seek
-    await new Promise((r) => (video.onseeked = r));
-
-    ctx.drawImage(video, 0, 0);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const grayscale = convertToGrayscale(imageData);
-
-    // Detect apriltag
-    const detections = await apriltag.detect(
-      grayscale,
-      canvas.width,
-      canvas.height,
+    console.log(
+      `Processing ${video.duration.toFixed(2)}s video at ${timeStepSeconds}s intervals...`,
     );
 
-    if (detections.length > 0) {
-      const tag = detections[0];
+    while (currentTime <= video.duration) {
+      video.currentTime = currentTime;
 
-      const leftEdge = Math.hypot(
-        tag.corners[3].x - tag.corners[0].x,
-        tag.corners[3].y - tag.corners[0].y,
-      );
-      const rightEdge = Math.hypot(
-        tag.corners[2].x - tag.corners[1].x,
-        tag.corners[2].y - tag.corners[1].y,
-      );
-      const tagHeightPx = (leftEdge + rightEdge) / 2;
+      // seek
+      await new Promise((r) => (video.onseeked = r));
 
-      trajectoryData.push({
-        t: currentTime,
-        x: tag.center.x,
-        y: tag.center.y,
-        tagHeightPx: tagHeightPx, // Calculate scale for each frame?
-      });
-      drawOverlay(ctx, tag);
+      ctx.drawImage(video, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const grayscale = convertToGrayscale(imageData);
+
+      // Detect apriltag
+      const detections = await apriltag.detect(
+        grayscale,
+        canvas.width,
+        canvas.height,
+      );
+
+      if (detections.length > 0) {
+        const tag = detections[0];
+
+        const leftEdge = Math.hypot(
+          tag.corners[3].x - tag.corners[0].x,
+          tag.corners[3].y - tag.corners[0].y,
+        );
+        const rightEdge = Math.hypot(
+          tag.corners[2].x - tag.corners[1].x,
+          tag.corners[2].y - tag.corners[1].y,
+        );
+        const tagHeightPx = (leftEdge + rightEdge) / 2;
+
+        trajectoryData.push({
+          t: currentTime,
+          x: tag.center.x,
+          y: tag.center.y,
+          tagHeightPx: tagHeightPx, // Calculate scale for each frame?
+        });
+        drawOverlay(ctx, tag);
+      }
+
+      // Increment by the input time step
+      currentTime += timeStepSeconds;
     }
 
-    // Increment by the input time step
-    currentTime += timeStepSeconds;
+    console.log("Finished. Points collected:", trajectoryData.length);
+
+    renderPositionPlot(trajectoryData);
+
+    const { velocityData, averageVelocity } = calculateVelocities(
+      trajectoryData,
+      tagHeightmm,
+      distanceWallmm,
+    );
+    console.log(`Average velocity: ${averageVelocity.toFixed(2)} arcsec/s`);
+    renderVelocityPlot(velocityData, averageVelocity);
+
+    URL.revokeObjectURL(blobUrl);
+  } finally {
+    isProcessing = false;
   }
-
-  console.log("Finished. Points collected:", trajectoryData.length);
-
-  renderPositionPlot(trajectoryData);
-
-  const { velocityData, averageVelocity } = calculateVelocities(
-    trajectoryData,
-    tagHeightmm,
-    distanceWallmm,
-  );
-  console.log(`Average velocity: ${averageVelocity.toFixed(2)} arcsec/s`);
-  renderVelocityPlot(velocityData, averageVelocity);
-
-  URL.revokeObjectURL(blobUrl);
 }
 
 function calculateVelocities(data, tagHeightmm, distanceWallmm) {
