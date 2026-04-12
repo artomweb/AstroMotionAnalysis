@@ -51,9 +51,23 @@
           id="file-input"
           accept="video/*"
         />
-        <button class="btn btn-warning" id="btn-clear">Clear</button>
+        <button class="btn btn-warning btn-disabled" id="btn-clear">
+          Clear
+        </button>
       </div>
-      <button class="btn btn-primary" id="btn-run">Run again</button>
+      <button class="btn btn-primary btn-disabled" id="btn-run">
+        Run again
+      </button>
+
+      <div class="w-full max-w-xl hidden" id="progress-container">
+        <progress
+          id="progress-bar"
+          class="progress progress-primary w-full"
+          value="0"
+          max="100"
+        ></progress>
+        <div class="text-sm text-center mt-1" id="progress-text">0%</div>
+      </div>
 
       <div id="imageCont"></div>
       <div id="pos-plot-div"></div>

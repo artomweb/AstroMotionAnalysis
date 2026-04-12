@@ -3,66 +3,6 @@ import "./style.css";
 import * as Comlink from "comlink";
 import Plotly from "plotly.js-dist";
 
-const worker = new Worker("/apriltag.js", { type: "classic" });
-
-const Apriltag = Comlink.wrap(worker);
-
-const apriltag = await new Apriltag(
-  Comlink.proxy(() => {
-    console.log("ready");
-  }),
-);
-
-const fileInput = document.getElementById("file-input");
-
-let lastFile = null;
-let isProcessing = false;
-
-fileInput.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (file) handleFile(file);
-  lastFile = file;
-});
-
-document.getElementById("btn-run").addEventListener("click", () => {
-  if (!lastFile) {
-    alert("No file loaded.");
-    return;
-  }
-
-  if (isProcessing) {
-    alert("Processing already in progress.");
-    return;
-  }
-
-  clearOutputs();
-  handleFile(lastFile);
-});
-
-document.getElementById("btn-clear").addEventListener("click", () => {
-  clearOutputs();
-
-  fileInput.value = ""; // reset file picker
-  lastFile = null;
-});
-
-function clearOutputs() {
-  // Remove canvases
-  document.querySelectorAll("canvas").forEach((c) => c.remove());
-
-  // Clear Plotly plots
-  const posDiv = document.getElementById("pos-plot-div");
-  const velDiv = document.getElementById("vel-plot-div");
-
-  Plotly.purge(posDiv);
-  Plotly.purge(velDiv);
-
-  posDiv.innerHTML = "";
-  velDiv.innerHTML = "";
-
-  // Optional: clear image container explicitly
-  document.getElementById("imageCont").innerHTML = "";
-}
 function initPersistentInputs() {
   const settings = [
     { id: "input-time-step", key: "InputTimeStep" },
@@ -88,6 +28,69 @@ function initPersistentInputs() {
 }
 
 initPersistentInputs();
+
+const worker = new Worker("/apriltag.js", { type: "classic" });
+
+const Apriltag = Comlink.wrap(worker);
+
+const apriltag = await new Apriltag(
+  Comlink.proxy(() => {
+    console.log("ready");
+  }),
+);
+
+const fileInput = document.getElementById("file-input");
+
+let lastFile = null;
+let isProcessing = false;
+
+fileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) handleFile(file);
+  lastFile = file;
+  updateButtonStates();
+});
+
+document.getElementById("btn-run").addEventListener("click", () => {
+  if (!lastFile) {
+    alert("No file loaded.");
+    return;
+  }
+
+  if (isProcessing) {
+    alert("Processing already in progress.");
+    return;
+  }
+
+  clearOutputs();
+  handleFile(lastFile);
+});
+
+document.getElementById("btn-clear").addEventListener("click", () => {
+  clearOutputs();
+
+  fileInput.value = ""; // reset file picker
+  lastFile = null;
+});
+
+function clearOutputs() {
+  document.querySelectorAll("canvas").forEach((c) => c.remove());
+
+  const posDiv = document.getElementById("pos-plot-div");
+  const velDiv = document.getElementById("vel-plot-div");
+
+  Plotly.purge(posDiv);
+  Plotly.purge(velDiv);
+
+  posDiv.innerHTML = "";
+  velDiv.innerHTML = "";
+
+  document.getElementById("imageCont").innerHTML = "";
+
+  resetProgress();
+  hideProgress();
+  updateButtonStates();
+}
 
 function convertToGrayscale(imageData) {
   const pixels = imageData.data;
@@ -118,6 +121,11 @@ async function handleFile(file) {
     video.muted = true;
 
     await new Promise((r) => (video.onloadedmetadata = r));
+
+    const totalSteps = Math.ceil(video.duration / timeStepSeconds);
+    let stepIndex = 0;
+    showProgress();
+    updateButtonStates();
 
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
@@ -173,6 +181,9 @@ async function handleFile(file) {
           tagHeightPx: tagHeightPx, // Calculate scale for each frame?
         });
         drawOverlay(ctx, tag);
+
+        stepIndex++;
+        updateProgress(stepIndex, totalSteps);
       }
 
       // Increment by the input time step
@@ -192,8 +203,10 @@ async function handleFile(file) {
     renderVelocityPlot(velocityData, averageVelocity);
 
     URL.revokeObjectURL(blobUrl);
+    updateProgress(1, 1);
   } finally {
     isProcessing = false;
+    updateButtonStates();
   }
 }
 
@@ -350,4 +363,48 @@ function renderVelocityPlot(velData, averageVelocity) {
   };
 
   Plotly.newPlot(plotDiv, [traceVel], layout, config);
+}
+
+function updateProgress(current, total) {
+  const percent = Math.min(100, (current / total) * 100);
+  const bar = document.getElementById("progress-bar");
+  const text = document.getElementById("progress-text");
+
+  if (bar) bar.value = percent;
+  if (text) text.textContent = `${percent.toFixed(1)}%`;
+}
+
+function resetProgress() {
+  updateProgress(0, 1);
+}
+
+function showProgress() {
+  const el = document.getElementById("progress-container");
+  if (el) el.classList.remove("hidden");
+}
+
+function hideProgress() {
+  const el = document.getElementById("progress-container");
+  if (el) el.classList.add("hidden");
+}
+
+function updateButtonStates() {
+  const runBtn = document.getElementById("btn-run");
+  const clearBtn = document.getElementById("btn-clear");
+
+  // Disable both while processing
+  if (isProcessing) {
+    runBtn.classList.add("btn-disabled");
+    clearBtn.classList.add("btn-disabled");
+    return;
+  }
+
+  // Enable/disable based on file presence
+  if (lastFile) {
+    runBtn.classList.remove("btn-disabled");
+    clearBtn.classList.remove("btn-disabled");
+  } else {
+    runBtn.classList.add("btn-disabled");
+    clearBtn.classList.add("btn-disabled");
+  }
 }
