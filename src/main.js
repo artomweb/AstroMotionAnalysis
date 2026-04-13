@@ -26,7 +26,7 @@ fileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) handleFile(file);
   lastFile = file;
-  UI.updateButtonStates();
+  UI.updateButtonStates(isProcessing, lastFile);
 });
 
 document.getElementById("btn-run").addEventListener("click", () => {
@@ -67,7 +67,7 @@ function clearOutputs() {
 
   UI.resetProgress();
   UI.hideProgress();
-  UI.updateButtonStates();
+  UI.updateButtonStates(isProcessing, lastFile);
 }
 
 function convertToGrayscale(imageData) {
@@ -103,7 +103,7 @@ async function handleFile(file) {
     const totalSteps = Math.ceil(video.duration / timeStepSeconds);
     let stepIndex = 0;
     UI.showProgress();
-    UI.updateButtonStates();
+    UI.updateButtonStates(isProcessing, lastFile);
 
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
@@ -184,7 +184,7 @@ async function handleFile(file) {
     UI.updateProgress(1, 1);
   } finally {
     isProcessing = false;
-    UI.updateButtonStates();
+    UI.updateButtonStates(isProcessing, lastFile);
   }
 }
 
