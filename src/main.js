@@ -3,29 +3,7 @@ import "./style.css";
 import * as Comlink from "comlink";
 import Plotly from "plotly.js-dist";
 
-function initPersistentInputs() {
-  const settings = [
-    { id: "input-time-step", key: "InputTimeStep" },
-    { id: "input-tag-height", key: "InputTagHeight" },
-    { id: "input-dist-wall", key: "InputDistWall" },
-  ];
-
-  settings.forEach(({ id, key }) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    // Check if a value exists in storage
-    const savedValue = localStorage.getItem(key);
-    if (savedValue !== null) {
-      el.value = savedValue;
-    }
-
-    // Update storage whenever the input changes
-    el.addEventListener("input", () => {
-      localStorage.setItem(key, el.value);
-    });
-  });
-}
+import { UI, initPersistentInputs } from "./ui.js";
 
 initPersistentInputs();
 
@@ -48,7 +26,7 @@ fileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) handleFile(file);
   lastFile = file;
-  updateButtonStates();
+  UI.updateButtonStates();
 });
 
 document.getElementById("btn-run").addEventListener("click", () => {
@@ -87,9 +65,9 @@ function clearOutputs() {
 
   document.getElementById("imageCont").innerHTML = "";
 
-  resetProgress();
-  hideProgress();
-  updateButtonStates();
+  UI.resetProgress();
+  UI.hideProgress();
+  UI.updateButtonStates();
 }
 
 function convertToGrayscale(imageData) {
@@ -124,8 +102,8 @@ async function handleFile(file) {
 
     const totalSteps = Math.ceil(video.duration / timeStepSeconds);
     let stepIndex = 0;
-    showProgress();
-    updateButtonStates();
+    UI.showProgress();
+    UI.updateButtonStates();
 
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
@@ -180,10 +158,10 @@ async function handleFile(file) {
           y: tag.center.y,
           tagHeightPx: tagHeightPx, // Calculate scale for each frame?
         });
-        drawOverlay(ctx, tag);
+        UI.drawOverlay(ctx, tag);
 
         stepIndex++;
-        updateProgress(stepIndex, totalSteps);
+        UI.updateProgress(stepIndex, totalSteps);
       }
 
       // Increment by the input time step
@@ -192,7 +170,7 @@ async function handleFile(file) {
 
     console.log("Finished. Points collected:", trajectoryData.length);
 
-    renderPositionPlot(trajectoryData);
+    UI.renderPositionPlot(trajectoryData);
 
     const { velocityData, averageVelocity } = calculateVelocities(
       trajectoryData,
@@ -200,13 +178,13 @@ async function handleFile(file) {
       distanceWallmm,
     );
     console.log(`Average velocity: ${averageVelocity.toFixed(2)} arcsec/s`);
-    renderVelocityPlot(velocityData, averageVelocity);
+    UI.renderVelocityPlot(velocityData, averageVelocity);
 
     URL.revokeObjectURL(blobUrl);
-    updateProgress(1, 1);
+    UI.updateProgress(1, 1);
   } finally {
     isProcessing = false;
-    updateButtonStates();
+    UI.updateButtonStates();
   }
 }
 
@@ -232,7 +210,7 @@ function calculateVelocities(data, tagHeightmm, distanceWallmm) {
     const angleChangeDeg = angleChangeRad * (180 / Math.PI);
     const angleChangeArcsec = angleChangeDeg * 3600;
 
-    const velocityArcsecPerSec = angleChangeArcsec / timeDiff;
+    const velocityArcsecPerSec = Math.abs(angleChangeArcsec / timeDiff);
 
     velocityData.push({
       t: curr.t,
@@ -246,165 +224,4 @@ function calculateVelocities(data, tagHeightmm, distanceWallmm) {
     velocityData.length > 0 ? totalVelocity / velocityData.length : 0;
 
   return { velocityData, averageVelocity };
-}
-
-function drawOverlay(ctx, det) {
-  ctx.strokeStyle = "red";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(det.corners[0].x, det.corners[0].y);
-  det.corners.forEach((p) => ctx.lineTo(p.x, p.y));
-  ctx.closePath();
-  ctx.stroke();
-}
-function renderPositionPlot(data) {
-  const plotDiv = document.getElementById("pos-plot-div");
-
-  const times = data.map((d) => d.t);
-  const xValues = data.map((d) => d.x);
-  const yValues = data.map((d) => d.y);
-
-  const traceX = {
-    x: times,
-    y: xValues,
-    name: "X Position",
-    type: "scatter",
-    mode: "lines+markers",
-    line: { color: "#2ecc71" },
-  };
-
-  const traceY = {
-    x: times,
-    y: yValues,
-    name: "Y Position",
-    type: "scatter",
-    mode: "lines+markers",
-    line: { color: "#e74c3c" },
-    // yaxis: "y2",
-  };
-
-  const layout = {
-    title: "AprilTag Tracking Data (tagStandard41h12)",
-    xaxis: { title: "Time (s)" },
-    yaxis: { title: "X Position (px)", titlefont: { color: "#2ecc71" } },
-    // yaxis2: {
-    //   title: "Y Position (px)",
-    //   titlefont: { color: "#e74c3c" },
-    //   overlaying: "y",
-    //   side: "right",
-    // },
-    template: "plotly_white",
-  };
-
-  const config = {
-    responsive: true,
-    toImageButtonOptions: {
-      format: "png",
-      filename: "trajectory_plot",
-    },
-  };
-
-  Plotly.newPlot(plotDiv, [traceX, traceY], layout, config);
-}
-
-function renderVelocityPlot(velData, averageVelocity) {
-  const plotDiv = document.getElementById("vel-plot-div");
-
-  const times = velData.map((d) => d.t);
-  const velocities = velData.map((d) => d.v);
-
-  const traceVel = {
-    x: times,
-    y: velocities,
-    name: "Frame Velocity",
-    type: "scatter",
-    mode: "lines+markers",
-    line: { color: "#3498db", width: 1 },
-    marker: { size: 4 },
-  };
-
-  const layout = {
-    title: "Velocity vs Time",
-    xaxis: { title: "Time (s)" },
-    yaxis: { title: "Velocity (arcsec/s)" },
-    template: "plotly_white",
-    // Draw the red horizontal mean line
-    shapes: [
-      {
-        type: "line",
-        x0: times[0],
-        x1: times[times.length - 1],
-        y0: averageVelocity,
-        y1: averageVelocity,
-        line: {
-          color: "red",
-          width: 2,
-          dash: "solid",
-        },
-      },
-    ],
-    annotations: [
-      {
-        x: times[times.length - 1],
-        y: averageVelocity,
-        xref: "x",
-        yref: "y",
-        text: `Mean: ${averageVelocity.toFixed(2)} arcsec/s`,
-        showarrow: false,
-        yshift: 10,
-        font: { color: "red" },
-      },
-    ],
-  };
-
-  const config = {
-    responsive: true,
-    toImageButtonOptions: { format: "png", filename: "velocity_plot" },
-  };
-
-  Plotly.newPlot(plotDiv, [traceVel], layout, config);
-}
-
-function updateProgress(current, total) {
-  const percent = Math.min(100, (current / total) * 100);
-  const bar = document.getElementById("progress-bar");
-  const text = document.getElementById("progress-text");
-
-  if (bar) bar.value = percent;
-  if (text) text.textContent = `${percent.toFixed(1)}%`;
-}
-
-function resetProgress() {
-  updateProgress(0, 1);
-}
-
-function showProgress() {
-  const el = document.getElementById("progress-container");
-  if (el) el.classList.remove("hidden");
-}
-
-function hideProgress() {
-  const el = document.getElementById("progress-container");
-  if (el) el.classList.add("hidden");
-}
-
-function updateButtonStates() {
-  const runBtn = document.getElementById("btn-run");
-  const clearBtn = document.getElementById("btn-clear");
-
-  // Disable both while processing
-  if (isProcessing) {
-    runBtn.classList.add("btn-disabled");
-    clearBtn.classList.add("btn-disabled");
-    return;
-  }
-
-  // Enable/disable based on file presence
-  if (lastFile) {
-    runBtn.classList.remove("btn-disabled");
-    clearBtn.classList.remove("btn-disabled");
-  } else {
-    runBtn.classList.add("btn-disabled");
-    clearBtn.classList.add("btn-disabled");
-  }
 }
