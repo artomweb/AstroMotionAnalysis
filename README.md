@@ -4,6 +4,8 @@ As part of a University group project we are creating a star tracker for astroph
 
 For tracking the stars, the required angular velocity is 15 arcsec/sec.
 
+A web app can be found at [astro.artomweb.com](https://astro.artomweb.com)
+
 Velocity over time
 
 <img width="300" alt="image" src="https://github.com/user-attachments/assets/f88c6f93-728f-4e57-b8d9-61a75c43ddb1" />
