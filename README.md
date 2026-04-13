@@ -22,6 +22,7 @@ Position over time
 
 1. An Apriltag is placed on the wall and the mount is setup so the camera can capture as many frames as possible with the tag visible.
 2. `captureInterval.py` captures an image every few seconds.
+  Alternatively a video can be recorded which can be used with the video scripts.
 3. `apriltagtrack.py` extracts the position of the tag in each frame.
 4. `velocityVsTime.py` plots the velocity in arcsec/sec over time.
 
