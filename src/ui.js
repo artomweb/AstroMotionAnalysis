@@ -98,8 +98,14 @@ export const UI = {
 
     const layout = {
       title: "AprilTag Tracking Data",
-      xaxis: { title: "Time (s)" },
-      yaxis: { title: "X Position (px)", titlefont: { color: "#2ecc71" } },
+      xaxis: {
+        title: { text: "Time (s)" },
+      },
+      yaxis: {
+        title: {
+          text: "X Position (px)",
+        },
+      },
       template: "plotly_white",
     };
 
@@ -123,8 +129,12 @@ export const UI = {
 
     const layout = {
       title: "Velocity vs Time",
-      xaxis: { title: "Time (s)" },
-      yaxis: { title: "Velocity (arcsec/s)" },
+      xaxis: {
+        title: { text: "Time (s)" },
+      },
+      yaxis: {
+        title: { text: "Velocity (arcsec/s)" },
+      },
       template: "plotly_white",
       shapes: [
         {
