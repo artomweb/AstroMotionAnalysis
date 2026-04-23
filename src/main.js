@@ -51,6 +51,42 @@ document.getElementById("btn-clear").addEventListener("click", () => {
   lastFile = null;
 });
 
+document.getElementById("btn-use-example").addEventListener("click", async () => {
+  const btn = document.getElementById("btn-use-example");
+  
+  // Prevent double clicks during loading
+  btn.disabled = true;
+  btn.innerText = "Loading...";
+
+  try {
+    // 1. Fetch the example video from your public directory
+    const response = await fetch("/example.mp4");
+    if (!response.ok) throw new Error("Could not find example.mp4");
+
+    const blob = await response.blob();
+    
+    // 2. Convert Blob to File object (required by your handleFile function)
+    const file = new File([blob], "example.mp4", { type: "video/mp4" });
+
+    // 3. Set state and process
+    lastFile = file;
+    
+    // Explicitly clear previous runs before processing example
+    clearOutputs();
+    
+    // 4. Trigger the existing pipeline
+    await handleFile(file);
+    
+  } catch (err) {
+    console.error("Error loading example:", err);
+    alert("Failed to load example video. Please ensure 'example.mp4' is in your public/root directory.");
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Use Example Video";
+    UI.updateButtonStates(isProcessing, lastFile);
+  }
+});
+
 function clearOutputs() {
   document.querySelectorAll("canvas").forEach((c) => c.remove());
 

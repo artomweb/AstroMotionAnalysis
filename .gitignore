@@ -27,3 +27,5 @@ dist-ssr
 */*.csv
 aprilVenv/
 apriltag-js-standalone/
+captures/
+pastCaptures/
