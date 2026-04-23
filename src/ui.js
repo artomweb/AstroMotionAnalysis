@@ -107,6 +107,7 @@ export const UI = {
         },
       },
       template: "plotly_white",
+      autosize: true,
     };
 
     Plotly.newPlot(plotDiv, [traceX, traceY], layout, { responsive: true });
@@ -156,6 +157,7 @@ export const UI = {
           font: { color: "red" },
         },
       ],
+      autosize: true,
     };
 
     Plotly.newPlot(plotDiv, [traceVel], layout, { responsive: true });
