@@ -23,7 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-*/*.MP4
 */*.csv
 aprilVenv/
 apriltag-js-standalone/
